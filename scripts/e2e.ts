@@ -10,7 +10,7 @@ import type { Exercise } from '../src/data/types';
 
 // Playwright wird nicht als Projekt-Abhängigkeit installiert, sondern global erwartet (require-Auflösung inkl. NODE_PATH).
 const { chromium, devices } = createRequire(import.meta.url)('playwright') as typeof import('playwright');
-const URL = 'http://localhost:4173/';
+const URL = process.env.E2E_URL ?? 'http://localhost:4173/';
 const SHOTS = process.argv[2];
 const errors: string[] = [];
 

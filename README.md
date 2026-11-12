@@ -4,7 +4,13 @@ Ein 7-Tage-Excel-Kurs für Einsteiger:innen mit Beispielen aus der Gastronomie �
 
 > Excel Quest ist ein **ergänzender Praxiskurs** und kein offizieller Vorbereitungskurs für die Befähigungsprüfung Gastgewerbe. Alle Rechenbeispiele sind vereinfachte Übungen (Annahme: Getränke 20 % USt, Speisen 10 % USt) und keine Steuer- oder Rechtsberatung.
 
-## Starten
+## Online nutzen
+
+**https://stanleykombot.github.io/Excelingo/** – keine Installation nötig. Der Fortschritt wird im Browser gespeichert (pro Gerät und Browser).
+
+Jeder Push auf `main` veröffentlicht die App automatisch über GitHub Actions (`.github/workflows/deploy.yml`).
+
+## Lokal starten
 
 Voraussetzung: [Node.js](https://nodejs.org) 18 oder neuer.
 
