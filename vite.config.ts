@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({ plugins: [react()] });
+// BASE_PATH wird beim Veröffentlichen auf GitHub Pages gesetzt (z. B. /Excelingo/).
+export default defineConfig({ base: process.env.BASE_PATH ?? '/', plugins: [react()] });
