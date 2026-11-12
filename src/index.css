@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { -webkit-text-size-adjust: 100%; }
+body { @apply bg-slate-50 text-ink-900 font-sans antialiased; }
+button { -webkit-tap-highlight-color: transparent; }
+code { @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-leaf-700; }
+
+@media print {
+  body { background: white; }
+  .no-print { display: none !important; }
+  .print-area { box-shadow: none !important; margin: 0 !important; }
+}
