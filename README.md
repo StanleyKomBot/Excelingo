@@ -27,7 +27,7 @@ Produktionsversion: `npm run build` und `npm run preview` (oder den Ordner `dist
 
 - Datei: **`public/Excel_Quest_Arbeitsbuch.xlsx`** (im Dashboard über „Arbeitsbuch (.xlsx)“ herunterladbar)
 - 7 Blätter: `01_Start`, `02_Grundlagen`, `03_Formatierung`, `04_Formeln`, `05_Funktionen`, `06_Kalkulation`, `07_Abschluss`
-- Gelbe Felder = Eingabe, blaue = Beispiel, graue = Lösung. Die Spalte „Check“ zeigt ✓ / ✗ per WENN-Formel.
+- Gelbe Felder = Eingabe, blaue = Beispiel, graue = Lösung. Die Spalte „Kontrolle“ zeigt ✓ / ✗ per WENN-Formel.
 - Neu erzeugen: `npm run workbook` (Quelle: `scripts/buildWorkbook.ts`, ExcelJS)
 
 ## Kursaufbau

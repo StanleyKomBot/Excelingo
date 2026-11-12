@@ -231,7 +231,7 @@ export function LessonPlayer({ day, lesson, lessonIndex, onComplete, onExit, onN
                     </ul>
                   )}
                   <p className="mt-3 text-sm text-ink-400">
-                    Hinweis: Die Website kann deine Excel-Datei nicht einsehen. Vergleiche dein Ergebnis selbst mit der Lösung – oder schau in die Spalte „Check“ im Arbeitsbuch.
+                    Hinweis: Die Website kann deine Excel-Datei nicht einsehen. Vergleiche dein Ergebnis selbst mit der Lösung – oder schau in die Spalte „Kontrolle“ im Arbeitsbuch. Die Lösungsspalten im Arbeitsbuch blendest du mit dem [+] über den Spaltenbuchstaben ein.
                   </p>
                 </div>
 

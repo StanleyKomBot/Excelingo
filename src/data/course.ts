@@ -127,7 +127,7 @@ export const DAYS: Day[] = [
           steps: [
             'Öffne das Blatt 02_Grundlagen.',
             'Schau dir die kleine Tabelle an und beantworte die drei Fragen. Schreib die Antworten in die gelben Felder G7 bis G9.',
-            'Schau in die Spalte „Check“: Dort erscheint ✓ richtig oder ✗ prüfen.',
+            'Schau in die Spalte „Kontrolle“: Dort erscheint ✓ richtig oder ✗ prüfen.',
           ],
           solution: ['G7: Mineralwasser', 'G8: 4,8', 'G9: B8'],
         },
@@ -192,7 +192,7 @@ export const DAYS: Day[] = [
             'Lies die Notizen vom Lagerrundgang (Zeilen 13–14).',
             'Übertrage jeden Artikel in die gelbe Tabelle ab Zeile 17: Artikel, Einheit, Bestand.',
             'Gib beim Bestand nur die Zahl ein. Nutze Tab (nach rechts) und Enter (nach unten).',
-            'Die Check-Spalte zeigt dir, ob der Bestand stimmt.',
+            'Die Kontrollspalte zeigt dir, ob der Bestand stimmt.',
           ],
           solution: ['Cola · 0,33 l · 48', 'Mineralwasser · 0,33 l · 60', 'Apfelsaft · 1 l · 12', 'Bier · 50-l-Fass · 3', 'Weißwein · 0,75 l · 18', 'Kaffeebohnen · 1 kg · 5'],
         },
@@ -577,7 +577,7 @@ export const DAYS: Day[] = [
         excel: {
           sheet: '04_Formeln',
           task: 'Aufgabe 3.2',
-          steps: ['Tippe in G8: =F8-E8 (Verfügbar minus Verbrauch) und drücke Enter.', 'Wiederhole das für die Zeilen 9 bis 12.', 'Sobald F und G stimmen, zeigt die Check-Spalte ✓.'],
+          steps: ['Tippe in G8: =F8-E8 (Verfügbar minus Verbrauch) und drücke Enter.', 'Wiederhole das für die Zeilen 9 bis 12.', 'Sobald F und G stimmen, zeigt die Kontrollspalte ✓.'],
           solution: ['G8: =F8-E8 → 42', 'G9: 43 · G10: 9 · G11: 16 · G12: 2'],
         },
       },
@@ -1425,7 +1425,7 @@ export const DAYS: Day[] = [
           '**Umsatz brutto** = verkauft × VK brutto. **Umsatz netto** = Umsatz brutto ÷ (1 + USt-Satz) – Achtung: Getränke 20 %, Speisen 10 %.',
           '**Wareneinsatz** = verkauft × EK pro Stück. **Rohertrag** = Umsatz netto − Wareneinsatz.',
           'Danach: SUMME, MITTELWERT und MAX für jede Spalte – und ein paar Anteile in %.',
-          'Arbeite Zeile für Zeile, kopiere Formeln nach unten und kontrolliere dich mit der Check-Spalte. Plane für die Excel-Aufgabe ca. 15–20 Minuten ein.',
+          'Arbeite Zeile für Zeile, kopiere Formeln nach unten und kontrolliere dich mit der Kontrollspalte. Plane für die Excel-Aufgabe ca. 15–20 Minuten ein.',
         ],
         example: {
           title: 'Die erste Zeile der Tagesabrechnung',
@@ -1466,7 +1466,7 @@ export const DAYS: Day[] = [
             'Öffne 07_Abschluss und lies die Schritte 1–7 oben.',
             'Fülle G7:J12, dann die Zeilen 13–15 (SUMME, MITTELWERT, MAX).',
             'Fülle die Auswertung ab Zeile 18 und formatiere die Tabelle.',
-            'Ziel: überall ✓ richtig in der Check-Spalte!',
+            'Ziel: überall ✓ richtig in der Kontrollspalte!',
           ],
           solution: [
             'Summen: Umsatz brutto 1.172,90 € · netto 1.021,50 € · Wareneinsatz 236,70 € · Rohertrag 784,80 €',

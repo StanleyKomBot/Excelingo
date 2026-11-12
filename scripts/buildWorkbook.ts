@@ -6,6 +6,8 @@
  * Lösungsformeln, die als TEXT angezeigt werden, sind in deutscher Schreibweise.
  */
 import ExcelJS from 'exceljs';
+import JSZip from 'jszip';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -104,6 +106,18 @@ function solutionHeader(ws: Ws, row: number, col: number, labels: string[]) {
 const KEY: { sheet: string; cell: string; v: string }[] = [];
 const key = (ws: Ws, row: number, col: number, v: string | number) => KEY.push({ sheet: ws.name, cell: `${colLetter(col)}${row}`, v: String(v) });
 
+/** Lösungsspalten gruppieren und einklappen: Mit [+] über den Spaltenbuchstaben werden sie sichtbar. */
+function hideSolutions(ws: Ws, from: number, to: number, hintCell: string) {
+  for (let c = from; c <= to; c++) {
+    ws.getColumn(c).outlineLevel = 1;
+    ws.getColumn(c).hidden = true;
+  }
+  ws.properties.outlineLevelCol = 1;
+  const h = ws.getCell(hintCell);
+  h.value = `🔑 Lösungen sind ausgeblendet (Spalten ${colLetter(from)}${to > from ? '–' + colLetter(to) : ''}). Erst selbst probieren – dann oben über den Spaltenbuchstaben auf das [+] klicken.`;
+  h.font = { bold: true, color: { argb: 'FFB45309' } };
+}
+
 const colLetter = (n: number) => String.fromCharCode(64 + n);
 const r2 = (x: number) => Math.round((x + 1e-9) * 100) / 100;
 
@@ -142,8 +156,8 @@ const sheet = (name: string, tab: string) =>
     '1. Lies zuerst die Lektion auf der Excel-Quest-Website.',
     '2. Wechsle dann zu Excel (Alt+Tab bzw. Cmd+Tab) und öffne das Blatt, das die Website nennt.',
     '3. Fülle die gelben Felder selbst aus – tippe Formeln immer selbst ein!',
-    '4. In der Spalte „Check“ erscheint ✓ richtig oder ✗ prüfen, sobald du etwas eingetragen hast.',
-    '5. Die grauen Lösungsbereiche rechts erst NACH deinem eigenen Versuch ansehen.',
+    '4. In der Spalte „Kontrolle“ erscheint ✓ richtig oder ✗ prüfen, sobald du etwas eingetragen hast.',
+    '5. Die Lösungen sind ausgeblendet. Erst NACH deinem Versuch: oben über den Spaltenbuchstaben auf [+] klicken.',
     '6. Speichere regelmäßig mit Strg+S (Mac: Cmd+S).',
   ]);
 
@@ -182,13 +196,20 @@ const sheet = (name: string, tab: string) =>
     'Alle Zahlen sind vereinfachte Übungsbeispiele (keine Steuer- oder Rechtsberatung).',
   ]);
   ws.getCell('A32').font = { italic: true, color: { argb: C.grey } };
+  section(ws, 35, 'Excel zeigt Englisch an?', 5);
+  note(ws, 36, [
+    'Dieses Arbeitsbuch ist für deutschsprachiges Excel geschrieben (SUMME, MITTELWERT, WENN; Strichpunkt ; als Trennzeichen).',
+    'Windows: Datei → Optionen → Sprache → bei „Office-Anzeigesprache“ Deutsch hinzufügen, „Als bevorzugt festlegen“, Excel neu starten.',
+    'Mac: Systemeinstellungen → Allgemein → Sprache & Region → Apps → Microsoft Excel → Deutsch, Excel neu starten.',
+    'Die Formeln in dieser Datei funktionieren in jeder Sprache – Excel übersetzt sie automatisch.',
+  ]);
   ws.getCell('A33').font = { italic: true, color: { argb: C.grey } };
 }
 
 // ---------------------------------------------------------------- 02_Grundlagen
 {
   const ws = sheet('02_Grundlagen', 'FF0EA5E9');
-  ws.columns = [{ width: 4 }, { width: 18 }, { width: 14 }, { width: 10 }, { width: 4 }, { width: 30 }, { width: 16 }, { width: 13 }, { width: 4 }, { width: 18 }];
+  ws.columns = [{ width: 4 }, { width: 18 }, { width: 14 }, { width: 10 }, { width: 4 }, { width: 30 }, { width: 16 }, { width: 13 }, { width: 4 }, { width: 18 }, { width: 12 }, { width: 10 }];
   title(ws, 'Tag 1 – Excel-Grundlagen', 'Zellen, Zeilen, Spalten · Daten eingeben · Getränkeinventur');
 
   section(ws, 4, 'Aufgabe 1.2 – Zellen finden', 10);
@@ -201,7 +222,7 @@ const sheet = (name: string, tab: string) =>
     ['Bier', '0,5 l', 4.8],
   ];
   mini.forEach((r, i) => r.forEach((v, j) => put(ws, 7 + i, 2 + j, v)));
-  header(ws, 6, 6, ['Frage', 'Deine Antwort', 'Check']);
+  header(ws, 6, 6, ['Frage', 'Deine Antwort', 'Kontrolle']);
   const q: [string, string][] = [
     ['Was steht in Zelle B9?', 'G7="Mineralwasser"'],
     ['Was steht in Zelle D10?', 'G8=4.8'],
@@ -222,7 +243,7 @@ const sheet = (name: string, tab: string) =>
     'Bier 50-l-Fass – 3 Fässer · Weißwein 0,75 l – 18 Flaschen · Kaffeebohnen 1 kg – 5 Packungen',
     'Übertrage die Notizen in die Tabelle: Artikel, Einheit und Bestand (nur die Zahl!). Tipp: Enter = nach unten, Tab = nach rechts.',
   ]);
-  header(ws, 16, 2, ['Artikel', 'Einheit', 'Bestand', '', 'Check (Bestand)']);
+  header(ws, 16, 2, ['Artikel', 'Einheit', 'Bestand', '', 'Kontrolle (Bestand)']);
   ws.getRow(16).getCell(5).fill = fill(C.white);
   const inv: [string, string, number][] = [
     ['Cola', '0,33 l', 48],
@@ -240,11 +261,11 @@ const sheet = (name: string, tab: string) =>
     key(ws, row, 4, n);
     check(ws, row, 6, [`D${row}`], [`D${row}=${n}`]);
   });
-  solutionHeader(ws, 16, 8, ['Lösung', '', 'Bestand']);
+  solutionHeader(ws, 16, 10, ['Lösung Artikel', 'Einheit', 'Bestand']);
   inv.forEach(([a, e, n], i) => {
-    put(ws, 17 + i, 8, a, { kind: 'solution' });
-    put(ws, 17 + i, 9, e, { kind: 'solution' });
-    put(ws, 17 + i, 10, n, { kind: 'solution' });
+    put(ws, 17 + i, 10, a, { kind: 'solution' });
+    put(ws, 17 + i, 11, e, { kind: 'solution' });
+    put(ws, 17 + i, 12, n, { kind: 'solution' });
   });
 
   section(ws, 24, 'Aufgabe 1.4 – Navigieren & Speichern', 10);
@@ -255,6 +276,7 @@ const sheet = (name: string, tab: string) =>
     '4. Korrigiere den Fehler: Doppelklick (oder F2) auf eine Zelle, ändern, Enter. Rückgängig machen: Strg+Z.',
     '5. Speichere die Datei über Datei → Speichern unter als „Excel_Quest_DeinName.xlsx“. Danach reicht Strg+S.',
   ]);
+  hideSolutions(ws, 10, 12, 'A3');
 }
 
 // ---------------------------------------------------------------- 03_Formatierung
@@ -311,7 +333,7 @@ const sheet = (name: string, tab: string) =>
 
   section(ws, 4, 'Aufgaben 3.1 + 3.2 – Lagerbewegung', 11);
   note(ws, 5, ['3.1: Verfügbar (F) = Anfangsbestand + Lieferung, z. B. in F8: =C8+D8     3.2: Endbestand (G) = Verfügbar − Verbrauch, z. B. =F8-E8']);
-  header(ws, 6, 2, ['Artikel', 'Anfangsbestand', 'Lieferung', 'Verbrauch', 'Verfügbar', 'Endbestand', 'Check']);
+  header(ws, 6, 2, ['Artikel', 'Anfangsbestand', 'Lieferung', 'Verbrauch', 'Verfügbar', 'Endbestand', 'Kontrolle']);
   // Beispielzeile
   put(ws, 7, 2, 'Beispiel: Orangensaft', { kind: 'example' });
   put(ws, 7, 3, 10, { kind: 'example' });
@@ -346,7 +368,7 @@ const sheet = (name: string, tab: string) =>
   note(ws, 15, [
     '3.3: Umsatz (E) = verkaufte Menge × Preis. Tippe in E17: =C17*D17 und Enter.   3.4: Kopiere die Formel mit dem Ausfüllkästchen bis E22 nach unten.',
   ]);
-  header(ws, 16, 2, ['Getränk', 'verkauft (Stk.)', 'Preis (brutto)', 'Umsatz', '', '', 'Check']);
+  header(ws, 16, 2, ['Getränk', 'verkauft (Stk.)', 'Preis (brutto)', 'Umsatz', '', '', 'Kontrolle']);
   ws.getRow(16).getCell(6).fill = fill(C.white);
   ws.getRow(16).getCell(7).fill = fill(C.white);
   const sales: [string, number, number][] = [
@@ -372,7 +394,7 @@ const sheet = (name: string, tab: string) =>
 
   section(ws, 24, 'Aufgabe 3.3 (Teil 2) – Preis pro Liter (Division)', 11);
   note(ws, 25, ['Preis pro Liter = Flaschenpreis ÷ Inhalt. Tippe in E27: =C27/D27 und kopiere nach unten.']);
-  header(ws, 26, 2, ['Produkt', 'Flaschenpreis', 'Inhalt (Liter)', 'Preis pro Liter', '', '', 'Check']);
+  header(ws, 26, 2, ['Produkt', 'Flaschenpreis', 'Inhalt (Liter)', 'Preis pro Liter', '', '', 'Kontrolle']);
   ws.getRow(26).getCell(6).fill = fill(C.white);
   ws.getRow(26).getCell(7).fill = fill(C.white);
   const liter: [string, number, number][] = [
@@ -392,6 +414,7 @@ const sheet = (name: string, tab: string) =>
     put(ws, row, 10, `=C${row}/D${row}`, { kind: 'solution' });
     put(ws, row, 11, r2(p / l), { kind: 'solution', fmt: EUR });
   });
+  hideSolutions(ws, 10, 11, 'A3');
 }
 
 // ---------------------------------------------------------------- 05_Funktionen
@@ -401,7 +424,7 @@ const sheet = (name: string, tab: string) =>
   title(ws, 'Tag 4 – Funktionen', 'SUMME · MITTELWERT · MIN · MAX (englisches Excel: SUM, AVERAGE, MIN, MAX)');
   section(ws, 4, 'Aufgaben 4.1 bis 4.3 – Getränkeverkäufe einer Woche', 8);
   note(ws, 5, ['4.1: Zeile 14 mit =SUMME(C7:C13)   4.2: Zeile 15 mit =MITTELWERT(…)   4.3: Zeile 16/17 mit =MIN(…) und =MAX(…). Spalte D genauso!']);
-  header(ws, 6, 2, ['Tag', 'verkaufte Getränke', 'Getränkeumsatz', 'Check']);
+  header(ws, 6, 2, ['Tag', 'verkaufte Getränke', 'Getränkeumsatz', 'Kontrolle']);
   const week: [string, number, number][] = [
     ['Montag', 182, 712.4],
     ['Dienstag', 165, 640.2],
@@ -441,9 +464,9 @@ const sheet = (name: string, tab: string) =>
 
   section(ws, 19, 'Aufgabe 4.4 – Finde den Fehler!', 8);
   note(ws, 20, [
-    'Die Summe in D28 ist falsch. Klicke auf D28 und drücke F2: Welche Zeile fehlt im Bereich? Korrigiere die Formel, bis im Check ✓ erscheint.',
+    'Die Summe in D28 ist falsch. Klicke auf D28 und drücke F2: Welche Zeile fehlt im Bereich? Korrigiere die Formel, bis in der Kontrollspalte ✓ erscheint.',
   ]);
-  header(ws, 21, 2, ['Kategorie', '', 'Speisenumsatz', 'Check']);
+  header(ws, 21, 2, ['Kategorie', '', 'Speisenumsatz', 'Kontrolle']);
   ws.getRow(21).getCell(3).fill = fill(C.head);
   const food: [string, number][] = [
     ['Suppen', 186],
@@ -469,6 +492,7 @@ const sheet = (name: string, tab: string) =>
   solutionHeader(ws, 21, 7, ['Lösung']);
   put(ws, 22, 7, `=SUMME(D22:D27) → ${right.toLocaleString('de-AT', { minimumFractionDigits: 2 })} €`, { kind: 'solution' });
   put(ws, 23, 7, 'Fehler: D27 (Tagesteller) fehlte', { kind: 'solution' });
+  hideSolutions(ws, 7, 8, 'A3');
 }
 
 // ---------------------------------------------------------------- 06_Kalkulation
@@ -479,7 +503,7 @@ const sheet = (name: string, tab: string) =>
 
   // ---- 5.1
   section(ws, 4, 'TEIL A · Aufgabe 5.1 – Prozentwert berechnen (Prozentwert = Grundwert × Prozentsatz)', 13);
-  header(ws, 5, 2, ['Situation', 'Grundwert', 'Prozentsatz', 'Prozentwert', '', '', '', '', 'Check']);
+  header(ws, 5, 2, ['Situation', 'Grundwert', 'Prozentsatz', 'Prozentwert', '', '', '', '', 'Kontrolle']);
   for (let c = 6; c <= 9; c++) ws.getRow(5).getCell(c).fill = fill(C.white);
   const pw: [string, number, number][] = [
     ['Trinkgeld auf Rechnung', 85, 0.1],
@@ -501,7 +525,7 @@ const sheet = (name: string, tab: string) =>
 
   // ---- 5.2
   section(ws, 10, 'Aufgabe 5.2 – Anteil berechnen (Anteil = Teil ÷ Ganzes, dann als % formatieren)', 13);
-  header(ws, 11, 2, ['Bereich', 'Tagesumsatz', 'Anteil', '', '', '', '', '', 'Check']);
+  header(ws, 11, 2, ['Bereich', 'Tagesumsatz', 'Anteil', '', '', '', '', '', 'Kontrolle']);
   for (let c = 5; c <= 9; c++) ws.getRow(11).getCell(c).fill = fill(C.white);
   const share: [string, number][] = [
     ['Getränke', 1189.2],
@@ -530,7 +554,7 @@ const sheet = (name: string, tab: string) =>
   put(ws, 19, 3, 0.05, { fmt: PCT, kind: 'example' });
   put(ws, 20, 2, 'Happy-Hour-Rabatt:').font = { bold: true };
   put(ws, 20, 3, 0.2, { fmt: PCT, kind: 'example' });
-  header(ws, 21, 2, ['Artikel', 'Preis aktuell', 'Preis + 5 %', 'Happy Hour − 20 %', '', '', '', '', 'Check']);
+  header(ws, 21, 2, ['Artikel', 'Preis aktuell', 'Preis + 5 %', 'Happy Hour − 20 %', '', '', '', '', 'Kontrolle']);
   for (let c = 6; c <= 9; c++) ws.getRow(21).getCell(c).fill = fill(C.white);
   const inc: [string, number][] = [
     ['Melange', 3.9],
@@ -554,7 +578,7 @@ const sheet = (name: string, tab: string) =>
   // ---- 5.4
   section(ws, 26, 'Aufgabe 5.4 – Aufschlag vs. Spanne', 13);
   note(ws, 27, ['Aufschlag = (VK netto − EK) ÷ EK  (bezogen auf den Einkaufspreis)     Spanne = (VK netto − EK) ÷ VK netto  (bezogen auf den Verkaufspreis)']);
-  header(ws, 28, 2, ['Artikel', 'EK netto', 'VK netto', 'Aufschlag %', 'Spanne %', '', '', '', 'Check']);
+  header(ws, 28, 2, ['Artikel', 'EK netto', 'VK netto', 'Aufschlag %', 'Spanne %', '', '', '', 'Kontrolle']);
   for (let c = 7; c <= 9; c++) ws.getRow(28).getCell(c).fill = fill(C.white);
   const mk: [string, number, number][] = [
     ['Cola 0,33 l', 0.6, 3],
@@ -584,7 +608,7 @@ const sheet = (name: string, tab: string) =>
     'a) Netto → Brutto: USt-Betrag = Netto × USt-Satz; Brutto = Netto × (1 + USt-Satz)',
     'b) Brutto → Netto: Netto = Brutto ÷ (1 + USt-Satz)  – NICHT Brutto × 0,8!   USt-Betrag = Brutto − Netto',
   ]);
-  header(ws, 36, 2, ['a) Artikel', 'USt-Satz', 'Netto', 'USt-Betrag', 'Brutto', '', '', '', 'Check']);
+  header(ws, 36, 2, ['a) Artikel', 'USt-Satz', 'Netto', 'USt-Betrag', 'Brutto', '', '', '', 'Kontrolle']);
   for (let c = 7; c <= 9; c++) ws.getRow(36).getCell(c).fill = fill(C.white);
   const nb: [string, number, number][] = [
     ['Kaiserschmarrn', 0.1, 12],
@@ -604,7 +628,7 @@ const sheet = (name: string, tab: string) =>
     put(ws, row, 12, `=D${row}*C${row} → ${r2(n * u).toFixed(2).replace('.', ',')} €`, { kind: 'solution' });
     put(ws, row, 13, `=D${row}*(1+C${row}) → ${r2(n * (1 + u)).toFixed(2).replace('.', ',')} €`, { kind: 'solution' });
   });
-  header(ws, 40, 2, ['b) Artikel', 'USt-Satz', 'Brutto', 'Netto', 'USt-Betrag', '', '', '', 'Check']);
+  header(ws, 40, 2, ['b) Artikel', 'USt-Satz', 'Brutto', 'Netto', 'USt-Betrag', '', '', '', 'Kontrolle']);
   for (let c = 7; c <= 9; c++) ws.getRow(40).getCell(c).fill = fill(C.white);
   const bn: [string, number, number][] = [
     ['Bier (Krügerl)', 0.2, 4.8],
@@ -631,7 +655,7 @@ const sheet = (name: string, tab: string) =>
   note(ws, 45, [
     'EK pro Portion = Gebindepreis ÷ Inhalt × Portion · VK netto = VK brutto ÷ 1,2 · Rohertrag = VK netto − EK pro Portion · Wareneinsatz % = EK pro Portion ÷ VK netto',
   ]);
-  header(ws, 46, 2, ['Getränk', 'Gebinde EK netto', 'Inhalt (l)', 'Portion (l)', 'EK pro Portion', 'VK brutto', 'VK netto', 'Rohertrag', 'Wareneinsatz %', 'Check']);
+  header(ws, 46, 2, ['Getränk', 'Gebinde EK netto', 'Inhalt (l)', 'Portion (l)', 'EK pro Portion', 'VK brutto', 'VK netto', 'Rohertrag', 'Wareneinsatz %', 'Kontrolle']);
   const bev: [string, number, number, number, number][] = [
     ['Bier vom Fass', 120, 50, 0.5, 4.8],
     ['Hauswein weiß (Achterl)', 40, 10, 0.125, 3.6],
@@ -664,7 +688,7 @@ const sheet = (name: string, tab: string) =>
   // ---- 6.3
   section(ws, 51, 'Aufgabe 6.3 – Food Cost: Kaiserschmarrn mit Zwetschkenröster (Rezept für 4 Portionen)', 13);
   note(ws, 52, ['Kosten = Menge × Preis pro Einheit. Danach: Gesamtkosten (SUMME), Kosten pro Portion (÷ 4), Wareneinsatz % (÷ VK netto).']);
-  header(ws, 53, 2, ['Zutat', 'Menge', 'Einheit', 'Preis/Einheit', 'Kosten', '', '', '', 'Check']);
+  header(ws, 53, 2, ['Zutat', 'Menge', 'Einheit', 'Preis/Einheit', 'Kosten', '', '', '', 'Kontrolle']);
   for (let c = 7; c <= 9; c++) ws.getRow(53).getCell(c).fill = fill(C.white);
   const recipe: [string, number, string, number][] = [
     ['Mehl', 0.25, 'kg', 1.2],
@@ -716,7 +740,7 @@ const sheet = (name: string, tab: string) =>
   // ---- 6.4
   section(ws, 69, 'Aufgabe 6.4 – Umsatz & Rohertrag vergleichen: Was bringt am meisten?', 13);
   note(ws, 70, ['Umsatz netto = verkauft × VK netto · Rohertrag/Stk. = VK netto − EK · Rohertrag gesamt = verkauft × Rohertrag/Stk.']);
-  header(ws, 71, 2, ['Produkt', 'verkauft', 'VK netto', 'EK pro Stk.', 'Umsatz netto', 'Rohertrag/Stk.', 'Rohertrag gesamt', '', 'Check']);
+  header(ws, 71, 2, ['Produkt', 'verkauft', 'VK netto', 'EK pro Stk.', 'Umsatz netto', 'Rohertrag/Stk.', 'Rohertrag gesamt', '', 'Kontrolle']);
   ws.getRow(71).getCell(9).fill = fill(C.white);
   const prod: [string, number, number, number][] = [
     ['Melange', 64, 3.25, 0.4],
@@ -755,6 +779,7 @@ const sheet = (name: string, tab: string) =>
   put(ws, 77, 12, `=SUMME(F72:F76) → ${r2(tU).toFixed(2).replace('.', ',')} €`, { kind: 'solution' });
   put(ws, 77, 13, `=SUMME(H72:H76) → ${r2(tR).toFixed(2).replace('.', ',')} €`, { kind: 'solution' });
   note(ws, 78, ['Frage zum Nachdenken: Welches Produkt bringt pro Stück am meisten Rohertrag – und welches insgesamt? (Lösung: pro Stück Kaiserschmarrn, insgesamt Bier)']);
+  hideSolutions(ws, 12, 13, 'A3');
 }
 
 // ---------------------------------------------------------------- 07_Abschluss
@@ -767,7 +792,7 @@ const sheet = (name: string, tab: string) =>
     'Schritt 3: Wareneinsatz = verkauft × EK pro Stk.      Schritt 4: Rohertrag = Umsatz netto − Wareneinsatz',
     'Schritt 5: Zeile 13 mit SUMME, Zeile 14 MITTELWERT, Zeile 15 MAX.      Schritt 6: Auswertung unten.      Schritt 7: Tabelle schön formatieren!',
   ]);
-  header(ws, 6, 2, ['Artikel', 'verkauft', 'VK brutto', 'USt-Satz', 'EK pro Stk.', 'Umsatz brutto', 'Umsatz netto', 'Wareneinsatz', 'Rohertrag', 'Check']);
+  header(ws, 6, 2, ['Artikel', 'verkauft', 'VK brutto', 'USt-Satz', 'EK pro Stk.', 'Umsatz brutto', 'Umsatz netto', 'Wareneinsatz', 'Rohertrag', 'Kontrolle']);
   const items: [string, number, number, number, number][] = [
     ['Melange', 58, 3.9, 0.2, 0.4],
     ['Cola 0,33 l', 36, 3.6, 0.2, 0.6],
@@ -856,11 +881,25 @@ const sheet = (name: string, tab: string) =>
   solutionHeader(ws, 5, 13, ['Lösung: Umsatz brutto | netto | Wareneinsatz | Rohertrag']);
   sol.forEach((t, i) => put(ws, 6 + i, 13, t, { kind: 'solution' }));
   ws.getColumn(13).width = 70;
+  hideSolutions(ws, 13, 13, 'A2');
 }
 
 // Reihenfolge prüfen & speichern
 const names = wb.worksheets.map((w) => w.name);
 if (JSON.stringify(names) !== JSON.stringify(SHEETS)) throw new Error('Blattnamen stimmen nicht: ' + names.join(', '));
-await wb.xlsx.writeFile(OUT);
+// ExcelJS markiert die eingeklappten Spalten selbst als „collapsed“. Excel erwartet das Attribut
+// an der Spalte NACH der Gruppe (dort sitzt der [+]-Knopf) – daher hier nachbessern.
+const zip = await JSZip.loadAsync((await wb.xlsx.writeBuffer()) as ArrayBuffer);
+for (const name of Object.keys(zip.files).filter((n) => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))) {
+  let xml = await zip.file(name)!.async('string');
+  let next = 0;
+  xml = xml.replace(/<col min="(\d+)" max="(\d+)"([^>]*?) collapsed="1"([^>]*)\/>/g, (_m, a, b, pre, post) => {
+    next = Number(b) + 1;
+    return `<col min="${a}" max="${b}"${pre}${post}/>`;
+  });
+  if (next) xml = xml.replace('</cols>', `<col min="${next}" max="${next}" width="9" collapsed="1"/></cols>`);
+  zip.file(name, xml);
+}
+writeFileSync(OUT, await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }));
 if (process.env.KEY_OUT) (await import('node:fs')).writeFileSync(process.env.KEY_OUT, JSON.stringify(KEY));
 console.log('✓ geschrieben:', OUT, '\n  Blätter:', names.join(', '));
